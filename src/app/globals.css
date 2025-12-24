@@ -1,0 +1,48 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --foreground-rgb: 0, 0, 0;
+  --background-start-rgb: 214, 219, 220;
+  --background-end-rgb: 255, 255, 255;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --foreground-rgb: 255, 255, 255;
+    --background-start-rgb: 0, 0, 0;
+    --background-end-rgb: 0, 0, 0;
+  }
+}
+
+/* Theme variants */
+.theme-default {
+  --foreground-rgb: 17, 24, 39; /* slate-900 */
+  --background-start-rgb: 249, 250, 251; /* gray-50 */
+  --background-end-rgb: 255, 255, 255;
+}
+.theme-dark {
+  --foreground-rgb: 255, 255, 255;
+  --background-start-rgb: 3, 7, 18; /* near black */
+  --background-end-rgb: 7, 8, 18;
+}
+.theme-summer {
+  --foreground-rgb: 30, 64, 175; /* blue-ish text */
+  --background-start-rgb: 255, 249, 231; /* amber-50 */
+  --background-end-rgb: 255, 251, 235;
+}
+.theme-winter {
+  --foreground-rgb: 10, 29, 58; /* navy */
+  --background-start-rgb: 240, 249, 255; /* sky-50 */
+  --background-end-rgb: 245, 251, 255;
+}
+.theme-holiday {
+  --foreground-rgb: 20, 83, 45; /* green */
+  --background-start-rgb: 245, 255, 250; /* mint */
+  --background-end-rgb: 255, 255, 255;
+}
+
+body {
+  color: rgb(var(--foreground-rgb));
+}

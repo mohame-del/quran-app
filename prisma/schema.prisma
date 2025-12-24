@@ -1,0 +1,167 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model School {
+  id           String    @id @default(uuid())
+  email        String    @unique
+  passwordHash String
+  name         String?   // Teacher Name
+  schoolName   String    @default("مدرسة الريّان للقرآن الكريم")
+  phone        String?
+  address      String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  students     Student[]
+}
+
+model Student {
+  id            String    @id @default(uuid())
+  firstName     String
+  lastName      String
+  
+  // Relations
+  schoolId      String
+  school        School    @relation(fields: [schoolId], references: [id])
+  
+  phone         String?
+  fatherPhone   String?
+  birthDate     DateTime?
+  dateOfJoining DateTime  @default(now())
+  
+  // Quran Progress
+  currentHizb    Int       @default(0) // 1 to 60
+  currentQuarter Int       @default(0) 
+  
+  // Status
+  isFrozen      Boolean   @default(false)
+  
+  // Tracking - Raw
+  attendance    Attendance[]
+  presentations Presentation[]
+  deductions    Deduction[]
+  notes         Note[]
+
+  // Tracking - Aggregated
+  weeklyEvaluations   WeeklyEvaluation[]
+  monthlyEvaluations  MonthlyEvaluation[]
+  yearlyEvaluations   YearlyEvaluation[]
+  
+  // Current Stats (Cached for Dashboard)
+  totalPoints       Int       @default(0)
+  currentWeeklyPoints Int     @default(0)
+  currentWeeklyRating Float   @default(0)
+  currentStars      Int       @default(0)
+  
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model WeeklyEvaluation {
+  id          String    @id @default(uuid())
+  studentId   String
+  student     Student   @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  
+  weekStartDate DateTime // Match with start of week (Saturday)
+  
+  attendancePoints  Int @default(0)
+  presentationPoints Int @default(0)
+  deductionPoints   Int @default(0)
+  
+  totalPoints       Int @default(0) // Max 15 usually
+  rating            Float @default(0) // Scale to 10
+  stars             Int @default(0)
+  
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@unique([studentId, weekStartDate])
+}
+
+model MonthlyEvaluation {
+  id          String    @id @default(uuid())
+  studentId   String
+  student     Student   @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  
+  month       Int       // 1-12
+  year        Int
+  
+  totalPoints       Int @default(0)
+  rating            Float @default(0)
+  stars             Int @default(0)
+  
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@unique([studentId, month, year])
+}
+
+model Attendance {
+  id        String           @id @default(uuid())
+  studentId String
+  student   Student          @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  
+  date      DateTime         // We will store the date part mostly
+  period    String
+  status    String           @default("PRESENT")
+  
+  createdAt DateTime         @default(now())
+
+  @@unique([studentId, date, period]) // Prevent duplicate attendance for same slot
+}
+
+model Presentation {
+  id        String   @id @default(uuid())
+  studentId String
+  student   Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  
+  date      DateTime
+  surah     String?
+  hizb      Int?     // The hizb they recited
+  quarter   Int?     // The quarter they recited
+  grade     String?  // Optional: A, B, C or 10/10
+  
+  createdAt DateTime @default(now())
+}
+
+model Deduction {
+  id        String   @id @default(uuid())
+  studentId String
+  student   Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  
+  points    Int
+  reason    String
+  date      DateTime @default(now())
+}
+
+model YearlyEvaluation {
+  id          String    @id @default(uuid())
+  studentId   String
+  student     Student   @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  
+  year        Int
+  
+  totalPoints       Int @default(0)
+  rating            Float @default(0)
+  stars             Int @default(0)
+  
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@unique([studentId, year])
+}
+
+model Note {
+  id        String   @id @default(uuid())
+  studentId String
+  student   Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  
+  content   String
+  createdAt DateTime @default(now())
+}
