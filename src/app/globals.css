@@ -18,31 +18,196 @@
 
 /* Theme variants */
 .theme-default {
-  --foreground-rgb: 17, 24, 39; /* slate-900 */
-  --background-start-rgb: 249, 250, 251; /* gray-50 */
+  --foreground-rgb: 17, 24, 39;
+  /* slate-900 */
+  --background-start-rgb: 249, 250, 251;
+  /* gray-50 */
   --background-end-rgb: 255, 255, 255;
 }
+
 .theme-dark {
   --foreground-rgb: 255, 255, 255;
-  --background-start-rgb: 3, 7, 18; /* near black */
+  --background-start-rgb: 3, 7, 18;
+  /* near black */
   --background-end-rgb: 7, 8, 18;
 }
+
 .theme-summer {
-  --foreground-rgb: 30, 64, 175; /* blue-ish text */
-  --background-start-rgb: 255, 249, 231; /* amber-50 */
+  --foreground-rgb: 30, 64, 175;
+  /* blue-ish text */
+  --background-start-rgb: 255, 249, 231;
+  /* amber-50 */
   --background-end-rgb: 255, 251, 235;
 }
+
 .theme-winter {
-  --foreground-rgb: 10, 29, 58; /* navy */
-  --background-start-rgb: 240, 249, 255; /* sky-50 */
+  --foreground-rgb: 10, 29, 58;
+  /* navy */
+  --background-start-rgb: 240, 249, 255;
+  /* sky-50 */
   --background-end-rgb: 245, 251, 255;
 }
+
 .theme-holiday {
-  --foreground-rgb: 20, 83, 45; /* green */
-  --background-start-rgb: 245, 255, 250; /* mint */
+  --foreground-rgb: 20, 83, 45;
+  /* green */
+  --background-start-rgb: 245, 255, 250;
+  /* mint */
   --background-end-rgb: 255, 255, 255;
 }
 
 body {
   color: rgb(var(--foreground-rgb));
+}
+
+/* Dark mode text improvements */
+@media (prefers-color-scheme: dark) {
+
+  input,
+  textarea,
+  select {
+    color: #ffffff;
+  }
+
+
+  /* Custom Admin Dashboard Styles */
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    @apply bg-slate-800 rounded-full;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    @apply bg-emerald-500/50;
+  }
+
+  .animate-fade-in {
+    animation: fadeIn 0.5s ease-out forwards;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}
+
+/* Glow Effects */
+@layer utilities {
+  .glow-emerald {
+    box-shadow: 0 0 20px rgba(16, 185, 129, 0.3);
+  }
+
+  .glow-emerald-lg {
+    box-shadow: 0 0 40px rgba(16, 185, 129, 0.4);
+  }
+
+  .glow-rose {
+    box-shadow: 0 0 20px rgba(244, 63, 94, 0.3);
+  }
+
+  .glow-amber {
+    box-shadow: 0 0 20px rgba(245, 158, 11, 0.3);
+  }
+
+  .glow-blue {
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+  }
+}
+
+/* Gradient Utilities */
+@layer utilities {
+  .gradient-emerald {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  }
+
+  .gradient-rose {
+    background: linear-gradient(135deg, #f43f5e 0%, #e11d48 100%);
+  }
+
+  .gradient-amber {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  }
+
+  .gradient-slate {
+    background: linear-gradient(135deg, #475569 0%, #334155 100%);
+  }
+}
+
+/* Enhanced Animations */
+@keyframes pulse-glow {
+
+  0%,
+  100% {
+    opacity: 1;
+    box-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
+  }
+
+  50% {
+    opacity: 0.8;
+    box-shadow: 0 0 20px rgba(16, 185, 129, 0.8);
+  }
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+@keyframes slide-in-right {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.animate-slide-in-right {
+  animation: slide-in-right 0.4s ease-out forwards;
+}
+
+/* Islamic Pattern Background */
+.islamic-pattern {
+  background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.02'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+}
+
+/* Custom Scrollbar for all elements */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #1e293b transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background-color: #1e293b;
+  border-radius: 10px;
+  border: 2px solid transparent;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background-color: #10b981;
 }

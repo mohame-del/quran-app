@@ -3,14 +3,15 @@
 import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/context/AuthContext'
+import { useAdminAuth } from '@/hooks/useAdminAuth'
 import Navbar from '@/components/Navbar'
 import { DashboardCharts } from '@/components/DashboardCharts'
-import { Users, School, Sun, Moon, Search, Check, X, Star } from 'lucide-react'
+import { Users, School, Sun, Moon, Search, Check, X, Star, Plus } from 'lucide-react'
 import Image from 'next/image'
 
 export default function Dashboard() {
     const router = useRouter()
-    const { user, loading: authLoading } = useAuth()
+    const { user, loading: authLoading, currentSectionId, activeSection } = useAuth()
     const [students, setStudents] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
     const [search, setSearch] = useState('')
@@ -18,19 +19,40 @@ export default function Dashboard() {
     // Attendance State (Local for Quick Actions)
     const [attendanceChanges, setAttendanceChanges] = useState<Record<string, boolean>>({})
 
+    // Admin Gate State
+    const { login: adminLogin } = useAdminAuth()
+    const [showAdminGate, setShowAdminGate] = useState(false)
+    const [adminCreds, setAdminCreds] = useState({ email: '', phone: '', password: '' })
+    const [adminError, setAdminError] = useState('')
+
+    // Admin Login Handler
+    const handleAdminLogin = (e: React.FormEvent) => {
+        e.preventDefault()
+        const success = adminLogin(adminCreds.email, adminCreds.phone, adminCreds.password)
+
+        if (success) {
+            router.push('/admin')
+        } else {
+            setAdminError('❌ بيانات الدخول غير صحيحة')
+        }
+    }
+
     useEffect(() => {
         if (!authLoading) {
             if (user) {
-                fetchStudents()
+                fetchStudents(currentSectionId)
             } else {
                 setLoading(false)
             }
         }
-    }, [user, authLoading])
+    }, [user, authLoading, currentSectionId])
 
-    const fetchStudents = async () => {
+    const fetchStudents = async (sectionId?: string | null) => {
         try {
-            const res = await fetch('/api/students')
+            const url = sectionId && sectionId !== 'all'
+                ? `/api/students?sectionId=${sectionId}`
+                : '/api/students'
+            const res = await fetch(url)
             const data = await res.json()
             if (data.success) setStudents(data.students)
         } catch (e) {
@@ -64,8 +86,8 @@ export default function Dashboard() {
                     period
                 })
             })
-            // Refetch to update UI
-            fetchStudents()
+            // Refetch to update UI with current section filter
+            fetchStudents(currentSectionId)
         } catch (e) {
             alert('Error updating attendance')
         }
@@ -287,17 +309,95 @@ export default function Dashboard() {
                                 {/* Divider */}
                                 <div className="h-px bg-gradient-to-r from-transparent via-slate-700 to-transparent mb-8"></div>
 
-                                {/* Developer Info */}
-                                <div className="mb-6">
+                                {/* Developer Info with Hidden Gate */}
+                                <div className="mb-6 relative">
                                     <p className="text-slate-500 text-sm mb-2">طُوّر بعناية بواسطة</p>
-                                    <h3 className="text-slate-200 font-bold text-lg mb-2">
-                                        وزير محمد الغزالي
-                                    </h3>
+
+                                    <button
+                                        onClick={() => setShowAdminGate(true)}
+                                        className="focus:outline-none hover:text-emerald-400 transition-colors"
+                                    >
+                                        <h3 className="text-slate-200 font-bold text-lg mb-2 cursor-pointer">
+                                            وزير محمد الغزالي
+                                        </h3>
+                                    </button>
+
                                     <p className="text-slate-400 text-sm leading-relaxed">
                                         اللهم علّمني ما ينفعني وانفعني بما علمتني
                                         <br />
                                         وزدني علمًا وعملًا صالحًا
                                     </p>
+
+                                    {/* Hidden Admin Gate Modal */}
+                                    {showAdminGate && (
+                                        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm animate-fade-in">
+                                            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-8 w-full max-w-md relative mx-4 shadow-2xl">
+                                                <button
+                                                    onClick={() => setShowAdminGate(false)}
+                                                    className="absolute top-4 left-4 text-slate-500 hover:text-white"
+                                                >
+                                                    <X size={24} />
+                                                </button>
+
+                                                <div className="text-center mb-6">
+                                                    <div className="w-16 h-16 bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4 text-emerald-500">
+                                                        <span className="text-2xl">🔐</span>
+                                                    </div>
+                                                    <h2 className="text-2xl font-bold text-white">بوابة الإدارة</h2>
+                                                    <p className="text-slate-400 text-sm mt-1">منطقة محظورة: للمصرح لهم فقط</p>
+                                                </div>
+
+                                                <form onSubmit={handleAdminLogin} className="space-y-4">
+                                                    <div>
+                                                        <label className="block text-slate-400 text-sm mb-1 text-right">البريد الإلكتروني</label>
+                                                        <input
+                                                            type="email"
+                                                            required
+                                                            className="w-full bg-slate-950 border border-slate-700 rounded-lg px-4 py-3 text-white focus:border-emerald-500 focus:outline-none text-left"
+                                                            placeholder="admin@example.com"
+                                                            value={adminCreds.email}
+                                                            onChange={e => setAdminCreds({ ...adminCreds, email: e.target.value })}
+                                                        />
+                                                    </div>
+                                                    <div>
+                                                        <label className="block text-slate-400 text-sm mb-1 text-right">رقم الهاتف</label>
+                                                        <input
+                                                            type="text"
+                                                            required
+                                                            className="w-full bg-slate-950 border border-slate-700 rounded-lg px-4 py-3 text-white focus:border-emerald-500 focus:outline-none text-left"
+                                                            placeholder="0770..."
+                                                            value={adminCreds.phone}
+                                                            onChange={e => setAdminCreds({ ...adminCreds, phone: e.target.value })}
+                                                        />
+                                                    </div>
+                                                    <div>
+                                                        <label className="block text-slate-400 text-sm mb-1 text-right">كلمة المرور</label>
+                                                        <input
+                                                            type="password"
+                                                            required
+                                                            className="w-full bg-slate-950 border border-slate-700 rounded-lg px-4 py-3 text-white focus:border-emerald-500 focus:outline-none text-left"
+                                                            placeholder="••••••••"
+                                                            value={adminCreds.password}
+                                                            onChange={e => setAdminCreds({ ...adminCreds, password: e.target.value })}
+                                                        />
+                                                    </div>
+
+                                                    {adminError && (
+                                                        <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-red-400 text-sm text-center">
+                                                            {adminError}
+                                                        </div>
+                                                    )}
+
+                                                    <button
+                                                        type="submit"
+                                                        className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded-lg transition-colors shadow-lg shadow-emerald-500/20"
+                                                    >
+                                                        دخول آمن
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
 
                                 {/* Copyright */}
@@ -319,19 +419,34 @@ export default function Dashboard() {
             <div className="pt-24 pb-12 max-w-7xl mx-auto px-6">
 
                 {/* Header */}
-                <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
-                    <div>
-                        <h1 className="text-3xl font-bold text-gray-800 dark:text-white mb-2">لوحة التحكم</h1>
-                        <p className="text-gray-500 dark:text-gray-400">أهلاً بك يا <span className="text-green-600 font-bold">{user.name || 'مستخدم'}</span> في لوحة إدارتك</p>
+                <div className="flex flex-col mb-8 gap-4">
+                    {/* School and Section Info */}
+                    <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 border-r-4 border-green-600 rounded-xl p-6 shadow-sm">
+                        <div className="flex items-center gap-3 mb-2">
+                            <div className="bg-green-600 p-2.5 rounded-lg text-white">
+                                <School size={24} />
+                            </div>
+                            <div className="flex-1">
+                                <h1 className="text-2xl font-bold text-gray-800 dark:text-white">
+                                    أنت تدير مدرسة <span className="text-green-600 dark:text-green-400">{user.schoolName || 'الريّان للقرآن الكريم'}</span>
+                                </h1>
+                                {activeSection && (
+                                    <div className="flex items-center gap-2 mt-2">
+                                        <div className="h-2 w-2 bg-green-500 rounded-full animate-pulse"></div>
+                                        <p className="text-gray-600 dark:text-gray-300 font-medium">
+                                            القسم النشط: <span className="text-green-600 dark:text-green-400 font-bold">{activeSection.name}</span>
+                                        </p>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
                     </div>
-                    <div className="w-full md:w-auto bg-white dark:bg-gray-800 p-3 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 flex items-center gap-3">
-                        <div className="bg-green-100 dark:bg-green-900/30 p-3 rounded-lg text-green-700 dark:text-green-300 shadow-inner">
-                            <School size={24} />
-                        </div>
-                        <div>
-                            <div className="text-xs text-gray-500 dark:text-gray-400">أنت تدير حالياً:</div>
-                            <div className="font-bold text-gray-800 dark:text-white text-lg">{user.schoolName}</div>
-                        </div>
+
+                    {/* Welcome Message */}
+                    <div className="flex justify-between items-center">
+                        <p className="text-gray-500 dark:text-gray-400 font-medium">
+                            أهلاً بك يا <span className="text-green-600 font-bold">{user.name || 'مستخدم'}</span> في فضاء إدارتك
+                        </p>
                     </div>
                 </div>
 

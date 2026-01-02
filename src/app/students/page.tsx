@@ -8,7 +8,7 @@ import Link from 'next/link'
 import { Plus, Search, User } from 'lucide-react'
 
 export default function StudentsList() {
-    const { user, loading: authLoading } = useAuth()
+    const { user, loading: authLoading, currentSectionId } = useAuth()
     const router = useRouter()
     const [students, setStudents] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
@@ -20,12 +20,17 @@ export default function StudentsList() {
             router.push('/login')
             return
         }
-        if (user) fetchStudents()
-    }, [user, authLoading, router])
+        if (user) {
+            fetchStudents(currentSectionId)
+        }
+    }, [user, authLoading, router, currentSectionId])
 
-    const fetchStudents = async () => {
+    const fetchStudents = async (sectionId?: string | null) => {
         try {
-            const res = await fetch('/api/students')
+            const url = sectionId && sectionId !== 'all'
+                ? `/api/students?sectionId=${sectionId}`
+                : '/api/students'
+            const res = await fetch(url)
             const data = await res.json()
             if (data.success) {
                 setStudents(data.students)

@@ -19,6 +19,22 @@ model School {
   updatedAt    DateTime  @updatedAt
 
   students     Student[]
+  sections     Section[]
+}
+
+model Section {
+  id          String    @id @default(uuid())
+  name        String
+  sheikhName  String?
+  email       String?   // Email of the sheikh responsible
+  
+  schoolId    String
+  school      School    @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  
+  students    Student[]
+  
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 }
 
 model Student {
@@ -30,10 +46,18 @@ model Student {
   schoolId      String
   school        School    @relation(fields: [schoolId], references: [id])
   
+  sectionId     String?
+  section       Section?  @relation(fields: [sectionId], references: [id])
+  
   phone         String?
   fatherPhone   String?
   birthDate     DateTime?
   dateOfJoining DateTime  @default(now())
+  
+  // Parent Information (Required)
+  parentEmail      String
+  parentPhone      String
+  parentLinkToken  String    @unique @default(uuid())
   
   // Quran Progress
   currentHizb    Int       @default(0) // 1 to 60

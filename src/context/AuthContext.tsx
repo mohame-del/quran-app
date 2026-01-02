@@ -8,11 +8,24 @@ type User = {
     email: string
     name?: string
     schoolName: string
+    schoolId?: string
+}
+
+type Section = {
+    id: string
+    name: string
+    sheikhName?: string
+    email?: string
 }
 
 type AuthContextType = {
     user: User | null
     loading: boolean
+    currentSectionId: string | null
+    sections: Section[]
+    activeSection: Section | null
+    setSection: (id: string | null) => void
+    refreshSections: () => Promise<void>
     login: (data: any) => Promise<void>
     register: (data: any) => Promise<void>
     logout: () => Promise<void>
@@ -23,11 +36,53 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined)
 export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [user, setUser] = useState<User | null>(null)
     const [loading, setLoading] = useState(true)
+    const [currentSectionId, setCurrentSectionId] = useState<string | null>(null)
+    const [sections, setSections] = useState<Section[]>([])
+    const [activeSection, setActiveSection] = useState<Section | null>(null)
     const router = useRouter()
 
     useEffect(() => {
+        const savedSid = typeof window !== 'undefined' ? localStorage.getItem('currentSectionId') : null
+        setCurrentSectionId(savedSid || 'all')
         checkAuth()
     }, [])
+
+    useEffect(() => {
+        if (user) {
+            refreshSections()
+        }
+    }, [user])
+
+    useEffect(() => {
+        if (sections.length > 0 && currentSectionId) {
+            const active = sections.find(s => s.id === currentSectionId)
+            setActiveSection(active || null)
+        } else {
+            setActiveSection(null)
+        }
+    }, [sections, currentSectionId])
+
+    async function refreshSections() {
+        if (!user) return
+        try {
+            const sid = user.schoolId || user.id
+            const res = await fetch(`/api/sections?schoolId=${sid}`)
+            const data = await res.json()
+            if (data.success) {
+                setSections(data.sections)
+            }
+        } catch (e) {
+            console.error('Failed to fetch sections:', e)
+        }
+    }
+
+    const setSection = (id: string | null) => {
+        const targetId = id || 'all'
+        setCurrentSectionId(targetId)
+        if (typeof window !== 'undefined') {
+            localStorage.setItem('currentSectionId', targetId)
+        }
+    }
 
     async function checkAuth() {
         try {
@@ -95,7 +150,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             setUser(data.user)
 
             // Only redirect if successful
-            router.replace('/students')
+            router.replace('/')
 
         } catch (e: any) {
             console.error('Login error:', e)
@@ -139,7 +194,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             setUser(data.user)
 
             // Only redirect if successful
-            router.replace('/students')
+            router.replace('/')
 
         } catch (e: any) {
             console.error('Registration error:', e)
@@ -162,7 +217,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     return (
-        <AuthContext.Provider value={{ user, loading, login, register, logout }}>
+        <AuthContext.Provider value={{
+            user, loading, currentSectionId, sections, activeSection,
+            setSection, refreshSections, login, register, logout
+        }}>
             {children}
         </AuthContext.Provider>
     )

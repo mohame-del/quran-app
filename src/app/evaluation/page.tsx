@@ -6,7 +6,7 @@ import { useAuth } from '@/context/AuthContext'
 import { Check, X, BookOpen, UserCheck, Search } from 'lucide-react'
 
 export default function Evaluation() {
-    const { user } = useAuth()
+    const { user, currentSectionId, activeSection } = useAuth()
     const [students, setStudents] = useState<any[]>([])
     const [search, setSearch] = useState('')
 
@@ -30,8 +30,11 @@ export default function Evaluation() {
         grade: '10' // Default grade
     })
 
-    const fetchStudents = async () => {
-        const res = await fetch('/api/students')
+    const fetchStudents = async (sectionId?: string | null) => {
+        const url = sectionId && sectionId !== 'all'
+            ? `/api/students?sectionId=${sectionId}`
+            : '/api/students'
+        const res = await fetch(url)
         const data = await res.json()
         if (data.success) {
             setStudents(data.students)
@@ -40,9 +43,10 @@ export default function Evaluation() {
     }
 
     useEffect(() => {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
-        if (user) fetchStudents()
-    }, [user])
+        if (user) {
+            fetchStudents(currentSectionId)
+        }
+    }, [user, currentSectionId])
 
 
 
